@@ -1,0 +1,44 @@
+#########################################################################################################
+##	This is an example .gitignore file for Vivado, please treat it as an example as 
+##	it might not be complete. In addition, XAPP 1165 should be followed.
+#########################################################################################################
+#########
+#Exclude all
+#########
+*
+!*/
+!.gitignore
+###########################################################################
+##	VIVADO
+###########################################################################
+#########
+
+# project file
+!*.xpr
+# construction file
+!*.xdc
+# ip file
+!*.xci
+# verilog file
+!*.v
+# head file
+!*.h
+# bit stream file
+!*.bit
+# pdf file
+!*.pdf
+# txt file
+!*.txt
+# excel file 
+!*.xls
+!*.xlsx
+
+# soft files
+!*.S
+!Makefile
+!*.mif
+!*.coe
+!*.s
+!*.elf
+!*.c
+!*.make
