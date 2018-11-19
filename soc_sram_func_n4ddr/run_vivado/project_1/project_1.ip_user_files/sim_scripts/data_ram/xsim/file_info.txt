@@ -1,0 +1,2 @@
+data_ram.v,verilog,xil_defaultlib,../../../../../../rtl/xilinx_ip/data_ram/sim/data_ram.v,
+glbl.v,Verilog,xil_defaultlib,glbl.v
