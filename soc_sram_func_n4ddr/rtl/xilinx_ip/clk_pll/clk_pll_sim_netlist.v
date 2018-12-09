@@ -1,10 +1,10 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
-// Tool Version: Vivado v.2018.1 (lin64) Build 2188600 Wed Apr  4 18:39:19 MDT 2018
-// Date        : Fri Dec  7 01:29:29 2018
-// Host        : LV-1701 running 64-bit Ubuntu 16.04.5 LTS
-// Command     : write_verilog -force -mode funcsim -rename_top clk_pll -prefix
-//               clk_pll_ clk_pll_sim_netlist.v
+// Tool Version: Vivado v.2018.1 (win64) Build 2188600 Wed Apr  4 18:40:38 MDT 2018
+// Date        : Fri Dec  7 15:07:47 2018
+// Host        : DESKTOP-1OHCSLD running 64-bit major release  (build 9200)
+// Command     : write_verilog -force -mode funcsim
+//               C:/Users/lvyuf/VivadoProjects/HARD_2018/rtl/xilinx_ip/clk_pll/clk_pll_sim_netlist.v
 // Design      : clk_pll
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -31,6 +31,7 @@ module clk_pll
         .timer_clk(timer_clk));
 endmodule
 
+(* ORIG_REF_NAME = "clk_pll_clk_wiz" *) 
 module clk_pll_clk_pll_clk_wiz
    (cpu_clk,
     timer_clk,
@@ -83,7 +84,7 @@ module clk_pll_clk_pll_clk_wiz
     .CLKFBOUT_PHASE(0.000000),
     .CLKIN1_PERIOD(10.000000),
     .CLKIN2_PERIOD(0.000000),
-    .CLKOUT0_DIVIDE(30),
+    .CLKOUT0_DIVIDE(18),
     .CLKOUT0_DUTY_CYCLE(0.500000),
     .CLKOUT0_PHASE(0.000000),
     .CLKOUT1_DIVIDE(9),

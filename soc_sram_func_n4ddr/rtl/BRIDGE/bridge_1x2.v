@@ -45,7 +45,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //   > Author      : LOONGSON
 //   > Date        : 2017-08-04
 //*************************************************************************
-`define CONF_ADDR_BASE 32'hffff_0000
+`define CONF_ADDR_BASE 32'hbfaf_0000
 `define CONF_ADDR_MASK 32'hffff_0000
 module bridge_1x2(                                 
     input                           clk,          // clock 

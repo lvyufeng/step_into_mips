@@ -44,29 +44,30 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //   > Author      : LOONGSON
 //   > Date        : 2017-08-04
 //*************************************************************************
+`define RANDOM_SEED {7'b1010101,16'h01FF}
 
-`define CR0_ADDR       16'h8000   //32'hffff_8000 
-`define CR1_ADDR       16'h8004   //32'hffff_8004 
-`define CR2_ADDR       16'h8008   //32'hffff_8008 
-`define CR3_ADDR       16'h800c   //32'hffff_800c 
-`define CR4_ADDR       16'h8010   //32'hffff_8010 
-`define CR5_ADDR       16'h8014   //32'hffff_8014 
-`define CR6_ADDR       16'h8018   //32'hffff_8018 
-`define CR7_ADDR       16'h801c   //32'hffff_801c 
+`define CR0_ADDR       16'h8000   //32'hbfaf_8000 
+`define CR1_ADDR       16'h8004   //32'hbfaf_8004 
+`define CR2_ADDR       16'h8008   //32'hbfaf_8008 
+`define CR3_ADDR       16'h800c   //32'hbfaf_800c 
+`define CR4_ADDR       16'h8010   //32'hbfaf_8010 
+`define CR5_ADDR       16'h8014   //32'hbfaf_8014 
+`define CR6_ADDR       16'h8018   //32'hbfaf_8018 
+`define CR7_ADDR       16'h801c   //32'hbfaf_801c 
 
-`define LED_ADDR       16'hf000   //32'hffff_f000 
-`define LED_RG0_ADDR   16'hf004   //32'hffff_f004 
-`define LED_RG1_ADDR   16'hf008   //32'hffff_f008 
-`define NUM_ADDR       16'hf010   //32'hffff_f010 
-`define SWITCH_ADDR    16'hf020   //32'hffff_f020 
-`define BTN_KEY_ADDR   16'hf024   //32'hffff_f024
-`define BTN_STEP_ADDR  16'hf028   //32'hffff_f028
-`define TIMER_ADDR     16'he000   //32'hffff_e000 
+`define LED_ADDR       16'hf000   //32'hbfaf_f000 
+`define LED_RG0_ADDR   16'hf004   //32'hbfaf_f004 
+`define LED_RG1_ADDR   16'hf008   //32'hbfaf_f008 
+`define NUM_ADDR       16'hf010   //32'hbfaf_f010 
+`define SWITCH_ADDR    16'hf020   //32'hbfaf_f020 
+`define BTN_KEY_ADDR   16'hf024   //32'hbfaf_f024
+`define BTN_STEP_ADDR  16'hf028   //32'hbfaf_f028
+`define TIMER_ADDR     16'he000   //32'hbfaf_e000 
 
-`define VIRTUAL_UART_ADDR 16'hfff0  //32'hffff_fff0
-`define SIMU_FLAG_ADDR    16'hfff4  //32'hffff_fff4 
-`define OPEN_TRACE_ADDR   16'hfff8  //32'hffff_fff8
-`define NUM_MONITOR_ADDR  16'hfffc  //32'hffff_fffc
+`define VIRTUAL_UART_ADDR 16'hfff0  //32'hbfaf_fff0
+`define SIMU_FLAG_ADDR    16'hfff4  //32'hbfaf_fff4 
+`define OPEN_TRACE_ADDR   16'hfff8  //32'hbfaf_fff8
+`define NUM_MONITOR_ADDR  16'hfffc  //32'hbfaf_fffc
 module confreg
 #(parameter SIMULATION=1'b0)
 (                     
@@ -208,6 +209,9 @@ begin
     write_timer_end_r2 <= write_timer_end_r1;
 end
 
+reg  [31:0] timer_r1;
+reg  [31:0] timer;
+
 always @(posedge timer_clk)
 begin
     write_timer_begin_r1 <= write_timer_begin;
@@ -229,9 +233,6 @@ begin
         timer <= timer + 1'b1;
     end
 end
-
-reg  [31:0] timer_r1;
-reg  [31:0] timer;
 
 always @(posedge clk)
 begin
@@ -260,7 +261,7 @@ begin
     end
     else if(write_open_trace)
     begin
-        open_trace <= conf_wdata[0];
+        open_trace <= |conf_wdata;
     end
 end
 //-----------------------------{open trace}end---------------------------//
@@ -622,22 +623,22 @@ begin
     else
     begin
         case ( scan_data )
-            4'd0 : num_a_g <= 7'b1111110;   //0
-            4'd1 : num_a_g <= 7'b0110000;   //1
-            4'd2 : num_a_g <= 7'b1101101;   //2
-            4'd3 : num_a_g <= 7'b1111001;   //3
-            4'd4 : num_a_g <= 7'b0110011;   //4
-            4'd5 : num_a_g <= 7'b1011011;   //5
-            4'd6 : num_a_g <= 7'b1011111;   //6
-            4'd7 : num_a_g <= 7'b1110000;   //7
-            4'd8 : num_a_g <= 7'b1111111;   //8
-            4'd9 : num_a_g <= 7'b1111011;   //9
-            4'd10: num_a_g <= 7'b1110111;   //a
-            4'd11: num_a_g <= 7'b0011111;   //b
-            4'd12: num_a_g <= 7'b1001110;   //c
-            4'd13: num_a_g <= 7'b0111101;   //d
-            4'd14: num_a_g <= 7'b1001111;   //e
-            4'd15: num_a_g <= 7'b1000111;   //f
+            4'd0 : num_a_g <= 7'b0000001;//7'b1111110;   //0
+            4'd1 : num_a_g <= 7'b1001111;//7'b0110000;   //1
+            4'd2 : num_a_g <= 7'b0010010;//7'b1101101;   //2
+            4'd3 : num_a_g <= 7'b0000110;//7'b1111001;   //3
+            4'd4 : num_a_g <= 7'b1001100;//7'b0110011;   //4
+            4'd5 : num_a_g <= 7'b0100100;//7'b1011011;   //5
+            4'd6 : num_a_g <= 7'b0100000;//7'b1011111;   //6
+            4'd7 : num_a_g <= 7'b0001111;//7'b1110000;   //7
+            4'd8 : num_a_g <= 7'b0000000;//7'b1111111;   //8
+            4'd9 : num_a_g <= 7'b0000100;//7'b1111011;   //9
+            4'd10: num_a_g <= 7'b0001000;//7'b1110111;   //a
+            4'd11: num_a_g <= 7'b1100000;//7'b0011111;   //b
+            4'd12: num_a_g <= 7'b0110001;//7'b1001110;   //c
+            4'd13: num_a_g <= 7'b1000010;//7'b0111101;   //d
+            4'd14: num_a_g <= 7'b0110000;//7'b1001111;   //e
+            4'd15: num_a_g <= 7'b0111000;//7'b1000111;   //f
         endcase
     end
 end

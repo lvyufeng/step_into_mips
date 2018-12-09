@@ -1,10 +1,10 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
-// Tool Version: Vivado v.2018.1 (lin64) Build 2188600 Wed Apr  4 18:39:19 MDT 2018
-// Date        : Sun Nov 18 15:48:34 2018
-// Host        : LV-1701 running 64-bit Ubuntu 16.04.5 LTS
-// Command     : write_verilog -force -mode funcsim -rename_top data_ram -prefix
-//               data_ram_ data_ram_sim_netlist.v
+// Tool Version: Vivado v.2018.1 (win64) Build 2188600 Wed Apr  4 18:40:38 MDT 2018
+// Date        : Fri Dec  7 15:12:56 2018
+// Host        : DESKTOP-1OHCSLD running 64-bit major release  (build 9200)
+// Command     : write_verilog -force -mode funcsim
+//               C:/Users/lvyuf/VivadoProjects/HARD_2018/rtl/xilinx_ip/data_ram/data_ram_sim_netlist.v
 // Design      : data_ram
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -195,6 +195,7 @@ module data_ram
         .web({1'b0,1'b0,1'b0,1'b0}));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_generic_cstr" *) 
 module data_ram_blk_mem_gen_generic_cstr
    (douta,
     clka,
@@ -1272,6 +1273,7 @@ module data_ram_blk_mem_gen_generic_cstr
         .wea(wea[0]));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_mux" *) 
 module data_ram_blk_mem_gen_mux
    (douta,
     ena,
@@ -3466,6 +3468,7 @@ module data_ram_blk_mem_gen_mux
         .R(1'b0));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
 module data_ram_blk_mem_gen_prim_width
    (\douta[7] ,
     clka,
@@ -5513,6 +5516,7 @@ module data_ram_blk_mem_gen_prim_width__parameterized9
         .wea(wea));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper" *) 
 module data_ram_blk_mem_gen_prim_wrapper
    (\douta[7] ,
     clka,
@@ -21384,6 +21388,7 @@ module data_ram_blk_mem_gen_prim_wrapper__parameterized9
         .WEBWE({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_top" *) 
 module data_ram_blk_mem_gen_top
    (douta,
     clka,
@@ -21438,7 +21443,7 @@ endmodule
 (* C_USE_URAM = "0" *) (* C_WEA_WIDTH = "4" *) (* C_WEB_WIDTH = "4" *) 
 (* C_WRITE_DEPTH_A = "65536" *) (* C_WRITE_DEPTH_B = "65536" *) (* C_WRITE_MODE_A = "WRITE_FIRST" *) 
 (* C_WRITE_MODE_B = "WRITE_FIRST" *) (* C_WRITE_WIDTH_A = "32" *) (* C_WRITE_WIDTH_B = "32" *) 
-(* C_XDEVICEFAMILY = "artix7" *) (* downgradeipidentifiedwarnings = "yes" *) 
+(* C_XDEVICEFAMILY = "artix7" *) (* ORIG_REF_NAME = "blk_mem_gen_v8_4_1" *) (* downgradeipidentifiedwarnings = "yes" *) 
 module data_ram_blk_mem_gen_v8_4_1
    (clka,
     rsta,
@@ -21706,6 +21711,7 @@ module data_ram_blk_mem_gen_v8_4_1
         .wea(wea));
 endmodule
 
+(* ORIG_REF_NAME = "blk_mem_gen_v8_4_1_synth" *) 
 module data_ram_blk_mem_gen_v8_4_1_synth
    (douta,
     clka,

@@ -120,8 +120,9 @@ reg [31:0] ref_wb_pc;
 reg [4 :0] ref_wb_rf_wnum;
 reg [31:0] ref_wb_rf_wdata_v;
 
-always @(negedge soc_clk)
+always @(posedge soc_clk)
 begin 
+    #1;
     if(|debug_wb_rf_wen && debug_wb_rf_wnum!=5'd0 && !debug_end && `CONFREG_OPEN_TRACE)
     begin
         trace_cmp_flag=1'b0;
@@ -137,6 +138,7 @@ end
 reg debug_wb_err;
 always @(posedge soc_clk)
 begin
+    #2;
     if(!resetn)
     begin
         debug_wb_err <= 1'b0;
@@ -146,16 +148,16 @@ begin
         if (  (debug_wb_pc!==ref_wb_pc) || (debug_wb_rf_wnum!==ref_wb_rf_wnum)
             ||(debug_wb_rf_wdata_v!==ref_wb_rf_wdata_v) )
         begin
-	        $display("--------------------------------------------------------------");
+            $display("--------------------------------------------------------------");
             $display("[%t] Error!!!",$time);
             $display("    reference: PC = 0x%8h, wb_rf_wnum = 0x%2h, wb_rf_wdata = 0x%8h",
                       ref_wb_pc, ref_wb_rf_wnum, ref_wb_rf_wdata_v);
             $display("    mycpu    : PC = 0x%8h, wb_rf_wnum = 0x%2h, wb_rf_wdata = 0x%8h",
                       debug_wb_pc, debug_wb_rf_wnum, debug_wb_rf_wdata_v);
-	        $display("--------------------------------------------------------------");
+            $display("--------------------------------------------------------------");
             debug_wb_err <= 1'b1;
-		    #40;
-	        $finish;
+            #40;
+            $finish;
         end
     end
 end
@@ -175,17 +177,17 @@ begin
     begin
         if(confreg_num_reg[7:0]!=confreg_num_reg_r[7:0]+1'b1)
         begin
-	        $display("--------------------------------------------------------------");
+            $display("--------------------------------------------------------------");
             $display("[%t] Error(%d)!!! Occurred in number 8'd%02d Functional Test Point!",$time, err_count, confreg_num_reg[31:24]);
-	        $display("--------------------------------------------------------------");
+            $display("--------------------------------------------------------------");
             err_count <= err_count + 1'b1;
         end
         else if(confreg_num_reg[31:24]!=confreg_num_reg_r[31:24]+1'b1)
         begin
-	        $display("--------------------------------------------------------------");
+            $display("--------------------------------------------------------------");
             $display("[%t] Error(%d)!!! Unknown, Functional Test Point numbers are unequal!",$time,err_count);
-	        $display("--------------------------------------------------------------");
-	        $display("==============================================================");
+            $display("--------------------------------------------------------------");
+            $display("==============================================================");
             err_count <= err_count + 1'b1;
         end
         else
@@ -200,7 +202,7 @@ initial
 begin
     $timeformat(-9,0," ns",10);
     while(!resetn) #5;
-	$display("==============================================================");
+    $display("==============================================================");
     $display("Test begin!");
 
     #10000;
@@ -211,21 +213,43 @@ begin
     end
 end
 
+//模拟串口打印
+wire uart_display;
+wire [7:0] uart_data;
+assign uart_display = `CONFREG_UART_DISPLAY;
+assign uart_data    = `CONFREG_UART_DATA;
+
+always @(posedge soc_clk)
+begin
+    if(uart_display)
+    begin
+        if(uart_data==8'hff)
+        begin
+            ;//$finish;
+        end
+        else
+        begin
+            $write("%c",uart_data);
+        end
+    end
+end
+
 //test end
 wire global_err = debug_wb_err || (err_count!=8'd0);
+wire test_end = (debug_wb_pc==`END_PC) || (uart_display && uart_data==8'hff);
 always @(posedge soc_clk)
 begin
     if (!resetn)
     begin
         debug_end <= 1'b0;
     end
-    else if(debug_wb_pc==`END_PC && !debug_end)
-	begin
+    else if(test_end && !debug_end)
+    begin
         debug_end <= 1'b1;
-	    $display("==============================================================");
-	    $display("Test end!");
-	    #40;
-	    $fclose(trace_ref);
+        $display("==============================================================");
+        $display("Test end!");
+        #40;
+        $fclose(trace_ref);
         if (global_err)
         begin
             $display("Fail!!!Total %d errors!",err_count);
@@ -237,26 +261,4 @@ begin
 	    $finish;
 	end
 end
-
-//模拟串口打印
-    wire uart_display;
-    wire [7:0] uart_data;
-    assign uart_display = `CONFREG_UART_DISPLAY;
-    assign uart_data    = `CONFREG_UART_DATA;
-    
-    always @(posedge soc_clk)
-    begin
-        if(uart_display)
-        begin
-            if(uart_data==8'hff)
-            begin
-                $finish;
-            end
-            else
-            begin
-                $write("%c",uart_data);
-            end
-        end
-    end
-    
 endmodule
