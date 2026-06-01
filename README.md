@@ -5,13 +5,40 @@
 本项目实验为《硬件综合设计》课程前导，同时也可作为NSCSCC（龙芯杯系统能力培养大赛）的入门教程。
 
 ****
-课程共有四次实验，分别为：
+课程原有四次实验，分别为：
 1. ALU设计，存储器IP使用: [lab_1](https://github.com/cquca/step_into_mips/tree/lab_1)
 2. 简单的取指译码模块: [lab_2](https://github.com/cquca/step_into_mips/tree/lab_2)
 3. 单周期MIPS CPU设计: [lab_3](https://github.com/cquca/step_into_mips/tree/lab_3)
 4. 简单五级流水线MIPS CPU设计: [lab_4](https://github.com/cquca/step_into_mips/tree/lab_4)
 
-相关文档资料和分别于本仓库不同分支。
+当前 master 分支正在继续补全后续 SoC 化实验：
+5. SoC 总线与统一地址空间: [lab_5_soc](docs/lab_5_soc.md)
+6. UART 与 Boot Monitor: [lab_6_uart_boot](docs/lab_6_uart_boot.md)
+7. 扩展 ISA 与 C Runtime: [lab_7_c_runtime](docs/lab_7_c_runtime.md)
+8. 中断、异常和 Timer: [lab_8_interrupt](docs/lab_8_interrupt.md)
+9. DDR2 外部内存: [lab_9_ddr](docs/lab_9_ddr.md)
+10. Tiny OS / RTOS: [lab_10_tiny_os](docs/lab_10_tiny_os.md)
+
+后续路线总览见：[lab_5_to_lab_10_roadmap](docs/lab_5_to_lab_10_roadmap.md)。
+
+`lab_4` 已加入可在 Vivado 2025.2 下运行的 batch 仿真/综合脚本，并补充了普通 Verilog ROM/RAM wrapper，避免依赖旧版 Block Memory Generator IP。`lab_5_soc` 已加入 Nexys4 DDR 最小 SoC 验证工程：MIPS 五级流水 CPU 通过 simple bus 写 GPIO/LED MMIO，支持仿真、生成 bitstream 和 JTAG 下载。
+
+常用命令：
+
+```bash
+source /mnt/data1/Xilinx/2025.2/Vivado/settings64.sh
+
+# lab_4 仿真/综合
+vivado -mode batch -source scripts/sim_lab4.tcl
+vivado -mode batch -source scripts/build_lab4.tcl
+
+# lab_5 仿真/构建/下载
+vivado -mode batch -source scripts/sim_lab5.tcl
+vivado -mode batch -source scripts/build_lab5.tcl
+vivado -mode batch -source scripts/program_lab5.tcl
+```
+
+相关文档资料分别位于本仓库不同分支和 `docs/` 目录。
 
 预备知识和器件实现:[prepare](https://github.com/cquca/step_into_mips/tree/prepare)
 
