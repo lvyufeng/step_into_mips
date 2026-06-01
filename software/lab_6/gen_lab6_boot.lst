@@ -1,0 +1,238 @@
+             reset:
+00000000: 200f0001  addi $t7,$zero,1
+00000004: 200c0002  addi $t4,$zero,2
+00000008: 20080001  addi $t0,$zero,1
+0000000c: ac080000  sw $t0,0($zero)
+             send_00_tx_wait:
+00000010: 8c0b1008  lw $t3,4104($zero)
+00000014: 016f6824  and $t5,$t3,$t7
+00000018: 11a0fffd  beq $t5,$zero,send_00_tx_wait
+0000001c: 00000000  nop
+00000020: 200a0073  addi $t2,$zero,115
+00000024: ac0a1000  sw $t2,4096($zero)
+             send_01_tx_wait:
+00000028: 8c0b1008  lw $t3,4104($zero)
+0000002c: 016f6824  and $t5,$t3,$t7
+00000030: 11a0fffd  beq $t5,$zero,send_01_tx_wait
+00000034: 00000000  nop
+00000038: 200a0074  addi $t2,$zero,116
+0000003c: ac0a1000  sw $t2,4096($zero)
+             send_02_tx_wait:
+00000040: 8c0b1008  lw $t3,4104($zero)
+00000044: 016f6824  and $t5,$t3,$t7
+00000048: 11a0fffd  beq $t5,$zero,send_02_tx_wait
+0000004c: 00000000  nop
+00000050: 200a0065  addi $t2,$zero,101
+00000054: ac0a1000  sw $t2,4096($zero)
+             send_03_tx_wait:
+00000058: 8c0b1008  lw $t3,4104($zero)
+0000005c: 016f6824  and $t5,$t3,$t7
+00000060: 11a0fffd  beq $t5,$zero,send_03_tx_wait
+00000064: 00000000  nop
+00000068: 200a0070  addi $t2,$zero,112
+0000006c: ac0a1000  sw $t2,4096($zero)
+             send_04_tx_wait:
+00000070: 8c0b1008  lw $t3,4104($zero)
+00000074: 016f6824  and $t5,$t3,$t7
+00000078: 11a0fffd  beq $t5,$zero,send_04_tx_wait
+0000007c: 00000000  nop
+00000080: 200a005f  addi $t2,$zero,95
+00000084: ac0a1000  sw $t2,4096($zero)
+             send_05_tx_wait:
+00000088: 8c0b1008  lw $t3,4104($zero)
+0000008c: 016f6824  and $t5,$t3,$t7
+00000090: 11a0fffd  beq $t5,$zero,send_05_tx_wait
+00000094: 00000000  nop
+00000098: 200a0069  addi $t2,$zero,105
+0000009c: ac0a1000  sw $t2,4096($zero)
+             send_06_tx_wait:
+000000a0: 8c0b1008  lw $t3,4104($zero)
+000000a4: 016f6824  and $t5,$t3,$t7
+000000a8: 11a0fffd  beq $t5,$zero,send_06_tx_wait
+000000ac: 00000000  nop
+000000b0: 200a006e  addi $t2,$zero,110
+000000b4: ac0a1000  sw $t2,4096($zero)
+             send_07_tx_wait:
+000000b8: 8c0b1008  lw $t3,4104($zero)
+000000bc: 016f6824  and $t5,$t3,$t7
+000000c0: 11a0fffd  beq $t5,$zero,send_07_tx_wait
+000000c4: 00000000  nop
+000000c8: 200a0074  addi $t2,$zero,116
+000000cc: ac0a1000  sw $t2,4096($zero)
+             send_08_tx_wait:
+000000d0: 8c0b1008  lw $t3,4104($zero)
+000000d4: 016f6824  and $t5,$t3,$t7
+000000d8: 11a0fffd  beq $t5,$zero,send_08_tx_wait
+000000dc: 00000000  nop
+000000e0: 200a006f  addi $t2,$zero,111
+000000e4: ac0a1000  sw $t2,4096($zero)
+             send_09_tx_wait:
+000000e8: 8c0b1008  lw $t3,4104($zero)
+000000ec: 016f6824  and $t5,$t3,$t7
+000000f0: 11a0fffd  beq $t5,$zero,send_09_tx_wait
+000000f4: 00000000  nop
+000000f8: 200a005f  addi $t2,$zero,95
+000000fc: ac0a1000  sw $t2,4096($zero)
+             send_10_tx_wait:
+00000100: 8c0b1008  lw $t3,4104($zero)
+00000104: 016f6824  and $t5,$t3,$t7
+00000108: 11a0fffd  beq $t5,$zero,send_10_tx_wait
+0000010c: 00000000  nop
+00000110: 200a006d  addi $t2,$zero,109
+00000114: ac0a1000  sw $t2,4096($zero)
+             send_11_tx_wait:
+00000118: 8c0b1008  lw $t3,4104($zero)
+0000011c: 016f6824  and $t5,$t3,$t7
+00000120: 11a0fffd  beq $t5,$zero,send_11_tx_wait
+00000124: 00000000  nop
+00000128: 200a0069  addi $t2,$zero,105
+0000012c: ac0a1000  sw $t2,4096($zero)
+             send_12_tx_wait:
+00000130: 8c0b1008  lw $t3,4104($zero)
+00000134: 016f6824  and $t5,$t3,$t7
+00000138: 11a0fffd  beq $t5,$zero,send_12_tx_wait
+0000013c: 00000000  nop
+00000140: 200a0070  addi $t2,$zero,112
+00000144: ac0a1000  sw $t2,4096($zero)
+             send_13_tx_wait:
+00000148: 8c0b1008  lw $t3,4104($zero)
+0000014c: 016f6824  and $t5,$t3,$t7
+00000150: 11a0fffd  beq $t5,$zero,send_13_tx_wait
+00000154: 00000000  nop
+00000158: 200a0073  addi $t2,$zero,115
+0000015c: ac0a1000  sw $t2,4096($zero)
+             send_14_tx_wait:
+00000160: 8c0b1008  lw $t3,4104($zero)
+00000164: 016f6824  and $t5,$t3,$t7
+00000168: 11a0fffd  beq $t5,$zero,send_14_tx_wait
+0000016c: 00000000  nop
+00000170: 200a0020  addi $t2,$zero,32
+00000174: ac0a1000  sw $t2,4096($zero)
+             send_15_tx_wait:
+00000178: 8c0b1008  lw $t3,4104($zero)
+0000017c: 016f6824  and $t5,$t3,$t7
+00000180: 11a0fffd  beq $t5,$zero,send_15_tx_wait
+00000184: 00000000  nop
+00000188: 200a0062  addi $t2,$zero,98
+0000018c: ac0a1000  sw $t2,4096($zero)
+             send_16_tx_wait:
+00000190: 8c0b1008  lw $t3,4104($zero)
+00000194: 016f6824  and $t5,$t3,$t7
+00000198: 11a0fffd  beq $t5,$zero,send_16_tx_wait
+0000019c: 00000000  nop
+000001a0: 200a006f  addi $t2,$zero,111
+000001a4: ac0a1000  sw $t2,4096($zero)
+             send_17_tx_wait:
+000001a8: 8c0b1008  lw $t3,4104($zero)
+000001ac: 016f6824  and $t5,$t3,$t7
+000001b0: 11a0fffd  beq $t5,$zero,send_17_tx_wait
+000001b4: 00000000  nop
+000001b8: 200a006f  addi $t2,$zero,111
+000001bc: ac0a1000  sw $t2,4096($zero)
+             send_18_tx_wait:
+000001c0: 8c0b1008  lw $t3,4104($zero)
+000001c4: 016f6824  and $t5,$t3,$t7
+000001c8: 11a0fffd  beq $t5,$zero,send_18_tx_wait
+000001cc: 00000000  nop
+000001d0: 200a0074  addi $t2,$zero,116
+000001d4: ac0a1000  sw $t2,4096($zero)
+             send_19_tx_wait:
+000001d8: 8c0b1008  lw $t3,4104($zero)
+000001dc: 016f6824  and $t5,$t3,$t7
+000001e0: 11a0fffd  beq $t5,$zero,send_19_tx_wait
+000001e4: 00000000  nop
+000001e8: 200a0020  addi $t2,$zero,32
+000001ec: ac0a1000  sw $t2,4096($zero)
+             send_20_tx_wait:
+000001f0: 8c0b1008  lw $t3,4104($zero)
+000001f4: 016f6824  and $t5,$t3,$t7
+000001f8: 11a0fffd  beq $t5,$zero,send_20_tx_wait
+000001fc: 00000000  nop
+00000200: 200a006d  addi $t2,$zero,109
+00000204: ac0a1000  sw $t2,4096($zero)
+             send_21_tx_wait:
+00000208: 8c0b1008  lw $t3,4104($zero)
+0000020c: 016f6824  and $t5,$t3,$t7
+00000210: 11a0fffd  beq $t5,$zero,send_21_tx_wait
+00000214: 00000000  nop
+00000218: 200a006f  addi $t2,$zero,111
+0000021c: ac0a1000  sw $t2,4096($zero)
+             send_22_tx_wait:
+00000220: 8c0b1008  lw $t3,4104($zero)
+00000224: 016f6824  and $t5,$t3,$t7
+00000228: 11a0fffd  beq $t5,$zero,send_22_tx_wait
+0000022c: 00000000  nop
+00000230: 200a006e  addi $t2,$zero,110
+00000234: ac0a1000  sw $t2,4096($zero)
+             send_23_tx_wait:
+00000238: 8c0b1008  lw $t3,4104($zero)
+0000023c: 016f6824  and $t5,$t3,$t7
+00000240: 11a0fffd  beq $t5,$zero,send_23_tx_wait
+00000244: 00000000  nop
+00000248: 200a0069  addi $t2,$zero,105
+0000024c: ac0a1000  sw $t2,4096($zero)
+             send_24_tx_wait:
+00000250: 8c0b1008  lw $t3,4104($zero)
+00000254: 016f6824  and $t5,$t3,$t7
+00000258: 11a0fffd  beq $t5,$zero,send_24_tx_wait
+0000025c: 00000000  nop
+00000260: 200a0074  addi $t2,$zero,116
+00000264: ac0a1000  sw $t2,4096($zero)
+             send_25_tx_wait:
+00000268: 8c0b1008  lw $t3,4104($zero)
+0000026c: 016f6824  and $t5,$t3,$t7
+00000270: 11a0fffd  beq $t5,$zero,send_25_tx_wait
+00000274: 00000000  nop
+00000278: 200a006f  addi $t2,$zero,111
+0000027c: ac0a1000  sw $t2,4096($zero)
+             send_26_tx_wait:
+00000280: 8c0b1008  lw $t3,4104($zero)
+00000284: 016f6824  and $t5,$t3,$t7
+00000288: 11a0fffd  beq $t5,$zero,send_26_tx_wait
+0000028c: 00000000  nop
+00000290: 200a0072  addi $t2,$zero,114
+00000294: ac0a1000  sw $t2,4096($zero)
+             send_27_tx_wait:
+00000298: 8c0b1008  lw $t3,4104($zero)
+0000029c: 016f6824  and $t5,$t3,$t7
+000002a0: 11a0fffd  beq $t5,$zero,send_27_tx_wait
+000002a4: 00000000  nop
+000002a8: 200a000d  addi $t2,$zero,13
+000002ac: ac0a1000  sw $t2,4096($zero)
+             send_28_tx_wait:
+000002b0: 8c0b1008  lw $t3,4104($zero)
+000002b4: 016f6824  and $t5,$t3,$t7
+000002b8: 11a0fffd  beq $t5,$zero,send_28_tx_wait
+000002bc: 00000000  nop
+000002c0: 200a000a  addi $t2,$zero,10
+000002c4: ac0a1000  sw $t2,4096($zero)
+             send_29_tx_wait:
+000002c8: 8c0b1008  lw $t3,4104($zero)
+000002cc: 016f6824  and $t5,$t3,$t7
+000002d0: 11a0fffd  beq $t5,$zero,send_29_tx_wait
+000002d4: 00000000  nop
+000002d8: 200a003e  addi $t2,$zero,62
+000002dc: ac0a1000  sw $t2,4096($zero)
+             send_30_tx_wait:
+000002e0: 8c0b1008  lw $t3,4104($zero)
+000002e4: 016f6824  and $t5,$t3,$t7
+000002e8: 11a0fffd  beq $t5,$zero,send_30_tx_wait
+000002ec: 00000000  nop
+000002f0: 200a0020  addi $t2,$zero,32
+000002f4: ac0a1000  sw $t2,4096($zero)
+             main:
+000002f8: 8c0b1008  lw $t3,4104($zero)
+000002fc: 016c6824  and $t5,$t3,$t4
+00000300: 11a0fffd  beq $t5,$zero,main
+00000304: 00000000  nop
+00000308: 8c0e1004  lw $t6,4100($zero)
+0000030c: 21080001  addi $t0,$t0,1
+00000310: ac080000  sw $t0,0($zero)
+             echo_tx_wait:
+00000314: 8c0b1008  lw $t3,4104($zero)
+00000318: 016f6824  and $t5,$t3,$t7
+0000031c: 11a0fffd  beq $t5,$zero,echo_tx_wait
+00000320: 00000000  nop
+00000324: ac0e1000  sw $t6,4096($zero)
+00000328: 080000be  j main
+0000032c: 00000000  nop

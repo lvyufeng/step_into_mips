@@ -46,7 +46,18 @@ source /path/to/Xilinx/2025.2/Vivado/settings64.sh
 
   其中 `build_lab5.tcl` 会生成 `build/lab5_top.bit`；`program_lab5.tcl` 会通过 JTAG 下载到已连接的 Nexys4 DDR，板上 LED 会按软件延时循环计数。
 
-- `lab_6_uart_boot` ~ `lab_10_tiny_os`：查看 `docs/` 中对应实验文档和 `src/`、`software/` 下的目录骨架。
+- `lab_6_uart_boot`：UART MMIO 与最小 boot monitor，启动后通过串口打印 banner 并回显输入字符。
+
+  ```bash
+  python3 software/lab_6/gen_lab6_boot.py
+  vivado -mode batch -source scripts/sim_lab6.tcl
+  vivado -mode batch -source scripts/build_lab6.tcl
+  vivado -mode batch -source scripts/program_lab6.tcl
+  ```
+
+  串口参数为 `115200 8N1`。
+
+- `lab_7_c_runtime` ~ `lab_10_tiny_os`：查看 `docs/` 中对应实验文档和 `src/`、`software/` 下的目录骨架。
 
 相关文档资料分别位于本仓库不同分支和 `docs/` 目录。
 
