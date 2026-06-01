@@ -24,8 +24,9 @@ module controller(
 	input wire clk,rst,
 	//decode stage
 	input wire[5:0] opD,functD,
-	output wire pcsrcD,branchD,equalD,jumpD,
-	
+	input wire equalD,
+	output wire pcsrcD,branchD,jumpD,
+
 	//execute stage
 	input wire flushE,
 	output wire memtoregE,alusrcE,
@@ -69,12 +70,12 @@ module controller(
 		{memtoregD,memwriteD,alusrcD,regdstD,regwriteD,alucontrolD},
 		{memtoregE,memwriteE,alusrcE,regdstE,regwriteE,alucontrolE}
 		);
-	flopr #(8) regM(
+	flopr #(3) regM(
 		clk,rst,
 		{memtoregE,memwriteE,regwriteE},
 		{memtoregM,memwriteM,regwriteM}
 		);
-	flopr #(8) regW(
+	flopr #(2) regW(
 		clk,rst,
 		{memtoregM,regwriteM},
 		{memtoregW,regwriteW}

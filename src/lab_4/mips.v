@@ -39,8 +39,9 @@ module mips(
 		clk,rst,
 		//decode stage
 		opD,functD,
-		pcsrcD,branchD,equalD,jumpD,
-		
+		equalD,
+		pcsrcD,branchD,jumpD,
+
 		//execute stage
 		flushE,
 		memtoregE,alusrcE,
