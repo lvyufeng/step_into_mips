@@ -68,7 +68,18 @@ source /path/to/Xilinx/2025.2/Vivado/settings64.sh
 
   串口参数为 `115200 8N1`。
 
-- `lab_8_interrupt` ~ `lab_10_tiny_os`：查看 `docs/` 中对应实验文档和 `src/`、`software/` 下的目录骨架。
+- `lab_8_interrupt`：最小 CP0-like 寄存器与 `mfc0/mtc0/eret`、timer 外设、中断控制器与固定异常入口 `0x0000_0180`。启动后通过串口打印 banner、`IRQ READY`，随后 timer 每约 1 秒触发一次中断，handler 打印 `tick` 并递增 LED。
+
+  ```bash
+  python3 software/lab_8/gen_lab8_boot.py
+  vivado -mode batch -source scripts/sim_lab8.tcl
+  vivado -mode batch -source scripts/build_lab8.tcl
+  vivado -mode batch -source scripts/program_lab8.tcl
+  ```
+
+  串口参数为 `115200 8N1`。
+
+- `lab_9_ddr` ~ `lab_10_tiny_os`：查看 `docs/` 中对应实验文档和 `src/`、`software/` 下的目录骨架。
 
 相关文档资料分别位于本仓库不同分支和 `docs/` 目录。
 
