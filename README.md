@@ -79,7 +79,18 @@ source /path/to/Xilinx/2025.2/Vivado/settings64.sh
 
   串口参数为 `115200 8N1`。
 
-- `lab_9_ddr` ~ `lab_10_tiny_os`：查看 `docs/` 中对应实验文档和 `src/`、`software/` 下的目录骨架。
+- `lab_9_ddr`：把 Nexys4 DDR 板载 DDR2 接入 `0x8000_0000 - 0x87ff_ffff`，CPU 数据访存接口升级为 `d_valid/d_ready` wait-state 模型；仿真使用行为级 `ddr_model`，上板使用真实 MIG 7-series DDR2 控制器。启动后等待 DDR calibration、写读 pattern，成功后 LED=`0x005a` 并通过 UART 周期性打印 `DDR PASS`。
+
+  ```bash
+  python3 software/lab_9/gen_lab9_boot.py
+  vivado -mode batch -source scripts/sim_lab9.tcl
+  vivado -mode batch -source scripts/build_lab9.tcl
+  vivado -mode batch -source scripts/program_lab9.tcl
+  ```
+
+  串口参数为 `115200 8N1`。若从程序最开始捕获，可看到 `step_into_mips lab9 ddr`、`DDR CAL OK`、`DDR PASS`；若 JTAG 下载时 USB-UART 重新枚举，重新打开串口后仍会持续看到 `DDR PASS`。
+
+- `lab_10_tiny_os`：查看 `docs/` 中对应实验文档和 `src/`、`software/` 下的目录骨架。
 
 相关文档资料分别位于本仓库不同分支和 `docs/` 目录。
 
