@@ -57,7 +57,18 @@ source /path/to/Xilinx/2025.2/Vivado/settings64.sh
 
   串口参数为 `115200 8N1`。
 
-- `lab_7_c_runtime` ~ `lab_10_tiny_os`：查看 `docs/` 中对应实验文档和 `src/`、`software/` 下的目录骨架。
+- `lab_7_c_runtime`：扩展 ISA（`lui/ori/andi/xori/bne/jal/jr/addu/subu/sll/srl`）与带 byte strobe 的数据总线，运行 ISA 自测并通过 UART 打印 banner、`ISA PASS` 后进入字符回显。
+
+  ```bash
+  python3 software/lab_7/gen_lab7_boot.py
+  vivado -mode batch -source scripts/sim_lab7.tcl
+  vivado -mode batch -source scripts/build_lab7.tcl
+  vivado -mode batch -source scripts/program_lab7.tcl
+  ```
+
+  串口参数为 `115200 8N1`。
+
+- `lab_8_interrupt` ~ `lab_10_tiny_os`：查看 `docs/` 中对应实验文档和 `src/`、`software/` 下的目录骨架。
 
 相关文档资料分别位于本仓库不同分支和 `docs/` 目录。
 
