@@ -1,6 +1,6 @@
 # Lab 10: Tiny OS / RTOS
 
-详细总路线见 [`lab_5_to_lab_10_roadmap.md`](lab_5_to_lab_10_roadmap.md)。
+Labs 5-10 的系统演进和设计取舍见 [`lab_5_to_lab_10_roadmap.md`](lab_5_to_lab_10_roadmap.md)。
 
 ## 目标
 
@@ -228,5 +228,5 @@ Linux 需要 MMU/TLB、完整 MIPS32 CP0、cache/uncached segment、复杂异常
 - 当前 syscall 是 callable ABI，不是 MIPS `syscall` 指令异常。
 - 当前没有用户态/内核态隔离、MMU、TLB 或进程地址空间。
 - Shell parser 只识别最小命令集的首字母/固定形式，目的是确定性验证。
-- OS 镜像仍由 Python 生成机器码；后续可把 `software/tiny_os/kernel/`、`shell/`、`user/` 逐步迁移为汇编/C 源码和 linker flow。
+- OS 镜像按本实验最终 baseline 仍由 Python generator 生成机器码，保持与前面 boot-ROM generator 教学流程一致；后续扩展可再迁移为汇编/C 源码和 linker flow。
 - Scheduler 是两任务 round-robin，无优先级和阻塞队列。

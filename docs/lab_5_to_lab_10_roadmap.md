@@ -1,811 +1,373 @@
-# step_into_mips 后续实验路线：从教学 MIPS CPU 到可交互 SoC
+# Labs 5-10：从教学 MIPS CPU 到 StepOS 的系统演进
 
-本文档记录 2026-06-01 讨论确定的后续计划，目标是把当前 `step_into_mips` 从“基本 MIPS 指令/五级流水实验”逐步补全为 Nexys4 DDR 上可运行的教学 SoC，并为 bootloader、小型 monitor、RTOS/教学 OS 打基础。
+本文档是 `step_into_mips` 后半段实验（Labs 5-10）的最终路线和设计 rationale。早期 Labs 1-4 完成基础数字部件、单周期 CPU 和五级流水 CPU；Labs 5-10 在此基础上逐步加入 SoC、UART、ISA/runtime、中断、DDR2 和 Tiny OS 能力，最终形成可在 Nexys4 DDR 上运行的 **StepOS** baseline。
 
-## 0. 总体目标
+主线目标不是直接移植 Linux，而是用可观察、可仿真、可上板验证的教学步骤，让学生理解一个最小 MIPS SoC 如何逐步具备操作系统所需的硬件和软件机制。
 
-当前仓库的主线是：
+## 总体演进
 
 ```text
 lab_1  ALU 设计、存储器 IP 使用
 lab_2  简单取指译码模块
 lab_3  单周期 MIPS CPU
 lab_4  简单五级流水线 MIPS CPU
+lab_5  SoC 总线与统一地址空间
+lab_6  UART 与 Boot Monitor
+lab_7  扩展 ISA 与 C Runtime 基础
+lab_8  CP0-like 中断、异常和 Timer
+lab_9  DDR2 外部内存与 wait-state 访存
+lab_10 StepOS Tiny OS / RTOS baseline
 ```
 
-后续继续保持这个教学梯度，不直接跳到 Linux，而是逐步加入 SoC 必需能力：
+Labs 5-10 的核心设计原则：
+
+1. **每一层只引入一类关键能力**，避免一次性跨到完整系统软件。
+2. **所有新增能力都有仿真验收和上板验收**。
+3. **硬件机制保持教学可见性**：地址译码、MMIO、timer IRQ、DDR ready/valid、TCB/context switch 都可以在 RTL 或 testbench 中直接追踪。
+4. **软件先使用 boot-ROM generator**，保证无外部交叉编译工具链时也能复现实验。
+5. **Linux 明确不是主线目标**；Lab 10 交付 Tiny OS / RTOS baseline，Linux 可作为远期 appendix。
+
+## 最终仓库结构
 
 ```text
-lab_5  SoC 化：总线、统一地址空间、BRAM、GPIO/MMIO
-lab_6  UART 与 boot monitor：串口交互和程序加载雏形
-lab_7  C runtime 与 ISA 扩展：让 CPU 能跑受限 C 程序
-lab_8  中断、异常、Timer：小型 OS 前置能力
-lab_9  DDR2 外部内存：接入 Nexys4 DDR 板上内存
-lab_10 Tiny OS / RTOS：教学 OS 综合实验
+src/lab_5_soc/          Lab 5 RTL：SoC bus + boot ROM + BRAM + GPIO
+src/lab_6_uart_boot/    Lab 6 RTL：UART MMIO + boot monitor
+src/lab_7_c_runtime/    Lab 7 RTL：扩展 ISA + byte strobe 数据通路
+src/lab_8_interrupt/    Lab 8 RTL：CP0-like + timer IRQ + irq controller
+src/lab_9_ddr/          Lab 9 RTL：DDR bridge + behavioral DDR + true MIG
+src/lab_10_tiny_os/     Lab 10 RTL：StepOS boot ROM + Lab 9 hardware base
+
+sim/lab_*_tb.v          对应实验的 XSim testbench
+scripts/sim_lab*.tcl    行为级仿真脚本
+scripts/build_lab*.tcl  bitstream 构建脚本
+scripts/program_lab*.tcl JTAG 下载脚本
+software/lab_*/         Labs 6-9 boot image generator
+software/tiny_os/       Lab 10 StepOS generator
+constr/                 Nexys4 DDR XDC
 ```
 
-推荐近期目标先完成到 `lab_6`：
+生成的 `.mem` 和 `.lst` 文件作为教学参考产物提交到仓库；Vivado `build/`、日志、bitstream、checkpoint 等构建输出不提交。
+
+## Lab 5：SoC 总线与统一地址空间
+
+### 教学目标
+
+Lab 5 从“CPU 直接连接 instruction/data memory”过渡到最小 SoC：
 
 ```text
-MIPS 五级流水 CPU
-  + 修复 lab_4 集成问题
-  + 可复现 Verilog BRAM ROM/RAM
-  + simple bus
-  + GPIO LED
-  + UART MMIO
-  + boot monitor
-  + Vivado batch build/program
-  + Nexys4 DDR 上板验证
-```
-
-完成 `lab_6` 后，系统应当能在串口中显示：
-
-```text
-step_into_mips monitor
-> help
-> r 00010000
-> w 00010000 12345678
-> g 00010000
-```
-
----
-
-## 1. Lab 4 修复与现代化
-
-严格说，新增实验之前应先让 `lab_4` 在当前 Vivado 2025.2 命令行环境下稳定仿真、综合、上板。
-
-### 1.1 目标
-
-- 修复五级流水 CPU 集成问题。
-- 保留原有小指令集测试程序。
-- 用可复现 Verilog memory 替代或旁路旧 Vivado Block Memory Generator `.xci` 依赖。
-- 增加 batch 仿真/构建脚本。
-
-### 1.2 已知问题
-
-#### ALU 端口数量不匹配
-
-`src/lab_4/datapath.v` 中 ALU 实例只连接 4 个端口，但 `alu.v` 模块声明包含 `overflow` 和 `zero`：
-
-```verilog
-alu alu(srca2E, srcb3E, alucontrolE, aluoutE);
-```
-
-应改成命名端口或补齐 unused wire。
-
-#### `equalD` 方向错误/混乱
-
-`equalD` 是 datapath 中比较器产生的结果，应作为 controller 输入，用来生成 `pcsrcD`。当前 controller 中将其声明为 output，需要修正接口方向。
-
-#### 旧 Xilinx IP 依赖
-
-当前 `inst_mem` / `data_mem` 主要依赖旧 `.xci`：
-
-```text
-src/lab_4/ip/inst_mem/inst_mem.xci
-src/lab_4/ip/data_mem/data_mem.xci
-```
-
-后续建议加入普通 Verilog memory wrapper，支持 `$readmemh`，便于仿真和 batch 构建。
-
-### 1.3 验收标准
-
-- `lab_4` testbench 仍能检测到：写地址 `84`、写数据 `7`，输出 `Simulation succeeded`。
-- Vivado/XSim batch 仿真通过。
-- 如需要，上板程序可通过 LED 或 debug 输出确认运行。
-
----
-
-## 2. Lab 5：SoC 总线与统一地址空间
-
-### 2.1 教学目标
-
-从：
-
-```text
-CPU + inst_mem ROM + data_mem RAM
-```
-
-过渡到：
-
-```text
-CPU + simple bus + boot ROM + BRAM RAM + MMIO GPIO
+CPU + simple_bus + boot ROM + BRAM RAM + MMIO GPIO
 ```
 
 学生需要理解：
 
-- CPU 通过地址访问不同设备。
-- ROM/RAM/MMIO 都是统一地址空间中的一段。
-- 外设寄存器与普通内存访问在硬件上如何区分。
+- CPU 通过地址访问不同设备；
+- ROM、RAM、MMIO 都是统一地址空间的一部分；
+- 外设寄存器与普通内存访问在硬件上通过地址译码区分；
+- boot ROM 可以让系统上电后自动运行固定程序。
 
-### 2.2 建议系统结构
+### 最终结构
 
-```text
-                 +----------------+
-                 |  MIPS Pipeline |
-                 |                |
-                 |  instr addr    |
-                 |  data addr     |
-                 +---+--------+---+
-                     |        |
-              +------+        +------+
-              |                    |
-        instruction bus       data bus
-              |                    |
-              +---------+----------+
-                        |
-                 +------v------+
-                 |  SoC Bus    |
-                 +------+------+ 
-                        |
-       +----------------+----------------+
-       |                |                |
-+------v------+  +------v------+  +------v------+
-| Boot ROM    |  | BRAM RAM    |  | MMIO GPIO   |
-| 0x00000000  |  | 0x00010000  |  | 0x10000000  |
-+-------------+  +-------------+  +-------------+
-```
-
-### 2.3 第一版地址空间
+代表性文件：
 
 ```text
-0x0000_0000 - 0x0000_3fff    boot ROM, 16 KiB
-0x0001_0000 - 0x0001_ffff    BRAM RAM, 64 KiB
-0x1000_0000 - 0x1000_00ff    GPIO / LED
-0x1000_0100 - 0x1000_01ff    debug registers
+src/lab_5_soc/top.v
+src/lab_5_soc/soc.v
+src/lab_5_soc/simple_bus.v
+src/lab_5_soc/boot_rom.v
+src/lab_5_soc/bram_ram.v
+src/lab_5_soc/gpio_mmio.v
+sim/lab_5_soc_tb.v
+scripts/sim_lab5.tcl
+scripts/build_lab5.tcl
+scripts/program_lab5.tcl
 ```
 
-### 2.4 CPU 外部接口
+### 验收
 
-`lab_5` 初期可以继续兼容当前 `lab_4` 的简单数据接口：
+- 仿真：CPU 从 boot ROM 取指，向 GPIO/LED MMIO 写入可检测值。
+- 上板：Nexys4 DDR LED 按 boot ROM 程序变化。
 
-```verilog
-output wire        memwriteM,
-output wire [31:0] aluoutM,
-output wire [31:0] writedataM,
-input  wire [31:0] readdataM
-```
+## Lab 6：UART 与 Boot Monitor
 
-外部加 bus decoder：
+### 教学目标
 
-```verilog
-simple_bus bus(
-    .clk(clk),
-    .rst(rst),
+Lab 6 加入串口 MMIO，使 SoC 不再只能通过 LED 观察状态，而可以通过 USB-UART 打印 banner、接收输入并回显。
 
-    .i_addr(pc),
-    .i_rdata(instr),
+新增能力：
 
-    .d_we(memwrite),
-    .d_addr(dataadr),
-    .d_wdata(writedata),
-    .d_rdata(readdata),
+- UART TX/RX；
+- UART status/data MMIO register；
+- boot monitor 风格的软件入口；
+- testbench 中 UART bit-level 收发验证。
 
-    .gpio_led(led)
-);
-```
+### 最终结构
 
-后续 `lab_7` 再升级为支持 byte-enable 和 wait-state 的接口。
-
-### 2.5 目录建议
+代表性文件：
 
 ```text
-src/lab_5_soc/
-  top.v
-  soc.v
-  simple_bus.v
-  boot_rom.v
-  bram_ram.v
-  gpio_mmio.v
-  mips_core/
-```
-
-### 2.6 验收标准
-
-仿真：
-
-```text
-CPU 从 boot ROM 取指；
-向 GPIO 地址 0x10000000 写入数据；
-testbench 检测写入值。
-```
-
-上板：
-
-```text
-boot ROM 程序通过 GPIO/MMIO 控制 Nexys4 DDR LED 闪烁或递增。
-```
-
----
-
-## 3. Lab 6：UART 与 Boot Monitor
-
-### 3.1 教学目标
-
-让 CPU 能通过串口和 PC 通信，进入“可交互系统”。
-
-### 3.2 系统结构
-
-```text
-MIPS CPU
-  + Boot ROM
-  + BRAM RAM
-  + GPIO
-  + UART
-```
-
-### 3.3 地址空间扩展
-
-```text
-0x0000_0000 - 0x0000_3fff    boot ROM
-0x0001_0000 - 0x0001_ffff    BRAM RAM
-0x1000_0000 - 0x1000_00ff    GPIO
-0x1000_1000 - 0x1000_10ff    UART
-```
-
-UART 寄存器：
-
-```text
-0x1000_1000 UART_TXDATA
-0x1000_1004 UART_RXDATA
-0x1000_1008 UART_STATUS
-```
-
-`UART_STATUS`：
-
-```text
-bit 0: tx_ready
-bit 1: rx_valid
-```
-
-### 3.4 UART 模块
-
-新增：
-
-```text
+src/lab_6_uart_boot/uart_mmio.v
 src/common/uart_tx.v
 src/common/uart_rx.v
-src/lab_6_uart_boot/uart_mmio.v
+software/lab_6/gen_lab6_boot.py
+src/lab_6_uart_boot/lab_6_boot.mem
+sim/lab_6_uart_boot_tb.v
+scripts/sim_lab6.tcl
+scripts/build_lab6.tcl
+scripts/program_lab6.tcl
 ```
 
-参数：
+### 验收
+
+- 仿真和硬件 UART 输出 boot banner。
+- 串口输入字符后系统回显。
+- 串口参数：`115200 8N1`。
+
+## Lab 7：扩展 ISA 与 C Runtime 基础
+
+### 教学目标
+
+Lab 7 补足运行更复杂软件所需的基础指令和数据通路能力，重点是让 boot image 可以执行更像 runtime/self-test 的程序。
+
+新增能力包括：
 
 ```text
-clk  = 100 MHz
-baud = 115200
+lui / ori / andi / xori / bne / jal / jr / addu / subu / sll / srl
+byte strobe data bus
+更完整的 boot ROM self-test
 ```
 
-### 3.5 Boot monitor 第一版
+### 设计意义
 
-初版 monitor 可用汇编实现，先不依赖 C 编译器。
+- `lui/ori` 让软件能构造 32-bit 地址和常量；
+- `jal/jr` 让 generator 能组织子程序；
+- byte strobe 是后续 MMIO、UART 和 C runtime 的基础；
+- ISA self-test 让 CPU 行为更容易回归验证。
 
-功能：
+### 验收
+
+- 仿真输出 `ISA PASS`。
+- 上板 UART 输出 banner 和 `ISA PASS`，随后进入字符回显。
+
+## Lab 8：中断、异常和 Timer
+
+### 教学目标
+
+Lab 8 引入最小 CP0-like 机制、固定异常入口和 timer interrupt，为 OS scheduler 做准备。
+
+核心机制：
 
 ```text
-h              help
-r addr         read word
-w addr data    write word
-g addr         jump
+CP0 Count / Compare / Status / Cause / EPC
+mfc0 / mtc0 / eret
+fixed exception vector: 0x0000_0180
+timer_mmio + irq_controller
 ```
 
-后续再加：
+### 设计取舍
+
+Lab 8 实现的是教学用 CP0-like 子集，不是完整 MIPS32 privileged architecture。它足以支撑：
+
+- 开关全局中断；
+- timer pending；
+- 进入固定异常入口；
+- 保存 EPC 并通过 `eret` 返回。
+
+同步异常分类、TLB/MMU、用户态/内核态隔离等留作远期扩展。
+
+### 验收
+
+- 启动后 UART 输出 banner 和 `IRQ READY`。
+- timer 周期触发 interrupt，handler 打印 `tick` 并递增 LED。
+- 仿真检查 tick 输出和 LED 变化。
+
+## Lab 9：DDR2 外部内存与 wait-state 访存
+
+### 教学目标
+
+Lab 9 把 Nexys4 DDR 板载 DDR2 接入 SoC，让 CPU 面对真实外部存储器延迟。
+
+关键新增能力：
 
 ```text
-load addr len  通过串口加载 hex/bin 程序
+d_valid / d_ready wait-state 数据访存接口
+DDR address window: 0x8000_0000 - 0x87ff_ffff
+behavioral ddr_model for simulation
+true MIG 7-series DDR2 backend for hardware
+bus/CPU stall while DDR transaction is outstanding
 ```
 
-### 3.6 软件目录
+### 设计意义
+
+早期 Labs 的 BRAM/MMIO 都可以单周期响应；DDR2 必须引入可停顿的数据访存协议。Lab 9 因此是从“简单 SoC”走向“真实外设/内存系统”的关键一步。
+
+### 验收
+
+- 仿真：行为级 `ddr_model` calibration done 后，DDR pattern 写读通过。
+- 上板：true MIG calibration done，DDR pattern 写读通过。
+- UART 可看到：
 
 ```text
-software/lab_6/
-  boot.S
-  uart.S
-  monitor.S
-  linker.ld
+step_into_mips lab9 ddr
+DDR CAL OK
+DDR PASS
 ```
 
-### 3.7 验收标准
+## Lab 10：StepOS Tiny OS / RTOS baseline
 
-上板后在 PC 端串口看到：
+### 教学目标
 
-```text
-step_into_mips boot monitor
-> 
-```
+Lab 10 在 Lab 9 DDR-capable SoC 上实现教学型 Tiny OS / RTOS baseline：**StepOS**。
 
-串口命令示例：
-
-```text
-> w 00010000 12345678
-OK
-> r 00010000
-12345678
-```
-
----
-
-## 4. Lab 7：扩展 ISA 与 C Runtime
-
-### 4.1 教学目标
-
-让 CPU 不再只能跑极小手写汇编，而是能跑受限 C 程序。
-
-### 4.2 当前指令集
-
-当前只支持：
-
-```text
-add/sub/and/or/slt
-lw/sw/beq/addi/j
-```
-
-### 4.3 必须补的指令
-
-第一批：
-
-```text
-lui
-ori
-bne
-jr
-jal
-addu
-subu
-sll
-srl
-```
-
-第二批：
-
-```text
-andi
-xori
-sra
-sltu
-lb
-lbu
-lh
-lhu
-sb
-sh
-jalr
-```
-
-这些指令支持后，简单 C runtime 和 UART driver 才比较自然。
-
-### 4.4 数据通路变化
-
-需要增加：
-
-- shamt 输入 ALU。
-- zero/sign extension。
-- byte lane select。
-- byte enable。
-- load data align。
-- store data mask。
-- `$31` link register 写入 `PC+8` 或 `PC+4`。
-- `jr/jalr` 寄存器跳转。
-
-### 4.5 内存接口升级
-
-当前接口只有 1 bit 写使能：
-
-```verilog
-output wire memwriteM
-```
-
-`lab_7` 起建议改成：
-
-```verilog
-output wire        d_we;
-output wire [3:0]  d_wstrb;
-output wire [31:0] d_addr;
-output wire [31:0] d_wdata;
-input  wire [31:0] d_rdata;
-```
-
-这样支持：
-
-```text
-sb/sh/sw
-lb/lh/lw
-```
-
-### 4.6 软件工具链
-
-新增：
-
-```text
-tools/bin2mem.py
-tools/mem2coe.py
-tools/serial_loader.py
-software/common/start.S
-software/common/linker.ld
-```
-
-第一阶段可以先用汇编生成 `.mem`，之后再引入：
-
-```bash
-mipsel-linux-gnu-gcc -nostdlib -nostartfiles
-```
-
-或 clang/LLVM MIPS target。
-
-### 4.7 验收标准
-
-可以运行简单 C-like 程序：
-
-```c
-int main() {
-    puts("hello mips\n");
-    while (1) {
-        int c = getchar();
-        putchar(c);
-    }
-}
-```
-
-串口 echo 成功。
-
----
-
-## 5. Lab 8：中断、异常和 Timer
-
-### 5.1 教学目标
-
-进入 OS 前置能力：
-
-```text
-timer interrupt
-exception entry
-context save/restore
-eret
-```
-
-### 5.2 新增硬件
-
-```text
-timer_mmio.v
-irq_controller.v
-cp0.v
-exception_controller.v
-```
-
-### 5.3 地址空间扩展
-
-```text
-0x1000_2000 - 0x1000_20ff    timer
-0x1000_3000 - 0x1000_30ff    interrupt controller
-```
-
-Timer 寄存器：
-
-```text
-0x1000_2000 TIMER_COUNTER
-0x1000_2004 TIMER_COMPARE
-0x1000_2008 TIMER_CONTROL
-0x1000_200c TIMER_STATUS
-```
-
-### 5.4 最小 CP0 集合
-
-```text
-Status
-Cause
-EPC
-Count
-Compare
-```
-
-新增指令：
-
-```text
-mfc0
-mtc0
-eret
-```
-
-### 5.5 异常入口
-
-```text
-reset vector:     0x0000_0000
-exception vector: 0x0000_0180
-```
-
-### 5.6 Pipeline 要处理
-
-异常/中断发生时：
-
-```text
-flush pipeline
-保存 EPC
-跳转 exception vector
-eret 恢复 PC
-```
-
-### 5.7 验收标准
-
-裸机程序：
-
-```text
-每 1 秒 timer interrupt
-LED 递增
-串口打印 tick
-```
-
----
-
-## 6. Lab 9：DDR2 外部内存
-
-### 6.1 目标
-
-接入 Nexys4 DDR 板上 DDR2，让系统不再受 BRAM 限制。
-
-### 6.2 地址空间扩展
-
-```text
-0x0000_0000 - 0x0000_3fff    boot ROM
-0x0001_0000 - 0x0001_ffff    BRAM RAM
-0x1000_0000 - 0x1000_ffff    MMIO
-0x8000_0000 - 0x87ff_ffff    DDR2, 128 MiB
-```
-
-### 6.3 推荐结构
-
-不要让 MIPS core 直接面对 MIG。中间加一层：
-
-```text
-CPU bus
-  +-- local ROM/RAM/MMIO
-  +-- ddr_bridge
-        +-- MIG/AXI/native DDR2
-```
-
-### 6.4 难点
-
-必须引入：
-
-```text
-ready/valid
-wait-state
-pipeline stall
-clock domain handling
-DDR calibration
-```
-
-所以在进入 `lab_9` 之前，CPU memory interface 应升级为：
-
-```verilog
-d_valid
-d_ready
-d_we
-d_wstrb
-d_addr
-d_wdata
-d_rdata
-```
-
-### 6.5 验收标准
-
-Boot ROM 启动后：
-
-```text
-检测 DDR calibration done
-向 DDR 写 pattern
-从 DDR 读回校验
-串口打印 pass/fail
-```
-
----
-
-## 7. Lab 10：Tiny OS / RTOS
-
-### 7.1 定位
-
-不建议第一阶段直接叫 Linux。更合理的是：
-
-```text
-StepOS
-TinyMIPS OS
-```
-
-### 7.2 最小 OS 功能
+StepOS 展示最小 OS 所需的主干机制：
 
 ```text
 boot
 UART console
 timer tick
 two tasks round-robin
-syscall putchar/getchar
+syscall-like ABI
 simple shell
+DDR mem command
 ```
 
-### 7.3 Shell 示例
+### 硬件基础
+
+Lab 10 复用 Lab 9 的硬件主干：
+
+- CP0-like interrupt path；
+- timer/irq controller；
+- UART/GPIO MMIO；
+- `d_valid/d_ready` wait-state memory；
+- behavioral DDR model；
+- true MIG DDR2 backend。
+
+Lab 10 的 boot ROM 扩展到 4096 words，读取：
 
 ```text
-step-os> help
-step-os> ps
-step-os> mem
-step-os> led 1
-step-os> run demo
+src/lab_10_tiny_os/lab_10_boot.mem
 ```
 
-### 7.4 Linux 放到 appendix
+### 软件结构
 
-Linux 需要：
+StepOS baseline 由 Python generator 生成机器码：
 
 ```text
-MMU/TLB
-MIPS32 CP0 完整兼容
-cache/uncached segment
-device tree 或平台代码
-复杂异常处理
-完整 toolchain ABI
+software/tiny_os/gen_lab10_boot.py
+software/tiny_os/gen_lab10_boot.lst
 ```
 
-这已经超出主线教学 CPU 补完范围。建议作为远期 appendix，而不是 main lab。
+这样保持与前面 boot-ROM generator 实验一致，不强制引入外部汇编器、链接脚本或 C cross toolchain。未来可以把 generator 中的 kernel/shell/user 逻辑拆成独立源码，但这不是 Lab 10 baseline 的必需条件。
 
----
+### Shell contract
 
-## 8. 推荐目录结构
+启动输出：
 
 ```text
-step_into_mips/
-  src/
-    common/
-      bram_sp.v
-      bram_dp.v
-      uart_tx.v
-      uart_rx.v
-      sync_reset.v
-
-    lab_5_soc/
-      top.v
-      soc.v
-      simple_bus.v
-      boot_rom.v
-      bram_ram.v
-      gpio_mmio.v
-      mips_core/
-
-    lab_6_uart_boot/
-      top.v
-      soc.v
-      simple_bus.v
-      uart_mmio.v
-      boot_rom.v
-      bram_ram.v
-      mips_core/
-
-    lab_7_c_runtime/
-      top.v
-      soc.v
-      bus/
-      peripherals/
-      mips_core/
-
-    lab_8_interrupt/
-      top.v
-      soc.v
-      cp0.v
-      timer_mmio.v
-      irq_controller.v
-      exception_controller.v
-      mips_core/
-
-    lab_9_ddr/
-      top.v
-      soc.v
-      ddr_bridge.v
-      mig/
-
-    lab_10_tiny_os/
-      top.v
-      soc.v
-
-  sim/
-    lab_5_soc_tb.v
-    lab_6_uart_boot_tb.v
-    lab_7_c_runtime_tb.v
-    lab_8_interrupt_tb.v
-
-  software/
-    common/
-      start.S
-      linker.ld
-      uart.S
-      crt0.S
-
-    lab_5/
-      led_test.S
-
-    lab_6/
-      boot.S
-      uart.S
-      monitor.S
-      linker.ld
-
-    lab_7/
-      hello_c/
-      echo/
-      loader_test/
-
-    lab_8/
-      timer_irq/
-      context_switch/
-
-    tiny_os/
-      kernel/
-      user/
-      shell/
-
-  tools/
-    bin2mem.py
-    mem2coe.py
-    serial_loader.py
-
-  constr/
-    nexys4ddr_lab5.xdc
-    nexys4ddr_lab6.xdc
-    nexys4ddr_lab7.xdc
-
-  scripts/
-    build_lab4.tcl
-    sim_lab4.tcl
-    build_lab5.tcl
-    build_lab6.tcl
-    program.tcl
-
-  docs/
-    lab_5_to_lab_10_roadmap.md
-    lab_5_soc.md
-    lab_6_uart_boot.md
-    lab_7_c_runtime.md
-    lab_8_interrupt.md
-    lab_9_ddr.md
-    lab_10_tiny_os.md
+step_into_mips lab10 tiny os
+DDR CAL OK
+DDR TEST OK
+OS INIT OK
+SCHED READY
+step-os>
 ```
 
----
-
-## 9. 第一阶段执行顺序
-
-### Step 1：修复 lab_4
-
-- 修 ALU 端口。
-- 修 `equalD` 方向。
-- 加 Verilog ROM/RAM wrapper。
-- 加 batch 仿真脚本。
-- 保证原始 lab_4 程序仿真通过。
-
-### Step 2：创建 `lab_5_soc`
-
-- simple bus。
-- boot ROM。
-- BRAM RAM。
-- GPIO LED。
-- Nexys4 DDR XDC。
-- Vivado batch build/program。
-
-### Step 3：创建 `lab_6_uart_boot`
-
-- UART TX/RX。
-- UART MMIO。
-- 汇编 boot monitor。
-- 串口输出 banner。
-
----
-
-## 10. 与 RISC-V 的关系
-
-主线仍保持 MIPS，因为仓库定位是 `step_into_mips`。
-
-RISC-V 可作为 appendix：
+支持命令：
 
 ```text
-appendix_riscv/
-  picorv32_soc/
-  litex_nexys4ddr/
+help
+ps
+mem
+led 1
+run demo
 ```
 
-如果未来目标转为“更快跑 bootloader/DDR/OS”，推荐 LiteX + VexRiscv；如果目标是补完教学 CPU，则继续 MIPS 主线。
+当前 shell 不回显输入字符；这是为了保持实现和验证简单。输入命令后按 Enter，系统直接输出结果和下一个 prompt。
+
+### 验收
+
+Lab 10 已具备三层验收：
+
+1. 行为级仿真：`LAB10_SIM_DONE`。
+2. true-MIG bitstream：routed timing met。
+3. Nexys4 DDR 硬件：JTAG startup HIGH，UART shell 命令通过。
+
+## 地址空间演进
+
+Labs 5-10 使用的最终主地址空间如下：
+
+```text
+0x0000_0000 - 0x0000_3fff    boot ROM / StepOS ROM
+0x0001_0000 - 0x0001_ffff    BRAM RAM / stacks / TCBs / globals
+0x1000_0000 - 0x1000_00ff    GPIO / LED MMIO
+0x1000_1000 - 0x1000_10ff    UART MMIO
+0x1000_2000 - 0x1000_20ff    timer MMIO
+0x1000_3000 - 0x1000_30ff    interrupt controller MMIO
+0x1000_4000 - 0x1000_40ff    DDR status MMIO
+0x8000_0000 - 0x87ff_ffff    DDR2 data window
+```
+
+早期实验只使用其中一部分；后续实验逐步扩展，而不是改变已有区域的语义。
+
+## 为什么 Lab 10 不是 Linux
+
+Linux 需要远超过当前教学 CPU baseline 的机制：
+
+- MMU/TLB 和完整地址空间隔离；
+- 完整 MIPS32 CP0 privileged architecture；
+- cache/uncached segment 语义；
+- 更完整异常分类和系统调用路径；
+- device tree 或平台代码；
+- 成熟 ABI、启动协议和 cross toolchain。
+
+这些内容适合作为远期 appendix 或比赛进阶路线。Labs 5-10 的主线目标是 TinyMIPS OS / StepOS：用最少机制演示 boot、console、timer、任务切换、内核服务和 DDR 资源管理。
+
+## 最终验证命令
+
+Lab 10 generator：
+
+```bash
+python3 software/tiny_os/gen_lab10_boot.py
+```
+
+Lab 10 simulation：
+
+```bash
+set +u
+unset ZSH_VERSION
+source /mnt/data1/Xilinx/2025.2/Vivado/settings64.sh
+vivado -mode batch -source scripts/sim_lab10.tcl
+```
+
+期望：
+
+```text
+Simulation succeeded: lab_10 StepOS shell and scheduler verified
+LAB10_SIM_DONE
+```
+
+Lab 10 bitstream：
+
+```bash
+vivado -mode batch -source scripts/build_lab10.tcl
+```
+
+期望：
+
+```text
+LAB10_BITSTREAM=/mnt/data1/nexys4/step_into_mips/build/lab10_top.bit
+All user specified timing constraints are met.
+```
+
+Lab 10 program：
+
+```bash
+vivado -mode batch -source scripts/program_lab10.tcl
+```
+
+期望：
+
+```text
+LAB10_PROGRAMMED=xc7a100t_0 BITSTREAM=/mnt/data1/nexys4/step_into_mips/build/lab10_top.bit
+```
+
+UART：`/dev/ttyUSB1`，`115200 8N1`。
