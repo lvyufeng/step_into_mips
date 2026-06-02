@@ -7,8 +7,9 @@ create_generated_clock -name clk50mhz -source [get_pins clk50mhz_reg/C] -divide_
 ## Center button as reset
 set_property -dict { PACKAGE_PIN N17 IOSTANDARD LVCMOS33 } [get_ports { rst }]
 
-## USB-UART through FT2232
-## Digilent master XDC names: UART_TXD_IN is FPGA RX input, UART_RXD_OUT is FPGA TX output.
+## USB-UART through FT2232.  Digilent names these pins from the USB host
+## perspective: UART_TXD_IN (C4) drives the FPGA RX input, and UART_RXD_OUT
+## (D4) is driven by the FPGA TX output.  Verified on Nexys4 DDR hardware.
 set_property -dict { PACKAGE_PIN C4 IOSTANDARD LVCMOS33 } [get_ports { uart_rx_i }]
 set_property -dict { PACKAGE_PIN D4 IOSTANDARD LVCMOS33 } [get_ports { uart_tx_o }]
 

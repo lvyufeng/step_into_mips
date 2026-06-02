@@ -71,7 +71,7 @@ vivado -mode batch -source scripts/build_lab6.tcl
 vivado -mode batch -source scripts/program_lab6.tcl
 ```
 
-串口参数：`115200 8N1`。Nexys4 DDR USB-UART 引脚使用 Digilent master XDC 的 `UART_TXD_IN=C4`、`UART_RXD_OUT=D4`。顶层把 100 MHz 输入时钟分频到 50 MHz 运行 SoC，UART 参数对应设置为 `UART_CLKS_PER_BIT=434`。
+串口参数：`115200 8N1`。Nexys4 DDR USB-UART 引脚使用 Digilent master XDC 的 `UART_TXD_IN=C4`、`UART_RXD_OUT=D4`，其中命名是 USB 主机视角：FPGA `uart_rx_i` 接 C4，FPGA `uart_tx_o` 接 D4。顶层把 100 MHz 输入时钟分频到 50 MHz 运行 SoC，UART 参数对应设置为 `UART_CLKS_PER_BIT=434`。下载后顶层会自动产生一个短暂的 power-on reset，不需要手动按 BTNC 才能启动 CPU。
 
 ## 验收标准
 
