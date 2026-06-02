@@ -90,7 +90,16 @@ source /path/to/Xilinx/2025.2/Vivado/settings64.sh
 
   串口参数为 `115200 8N1`。若从程序最开始捕获，可看到 `step_into_mips lab9 ddr`、`DDR CAL OK`、`DDR PASS`；若 JTAG 下载时 USB-UART 重新枚举，重新打开串口后仍会持续看到 `DDR PASS`。
 
-- `lab_10_tiny_os`：查看 `docs/` 中对应实验文档和 `src/`、`software/` 下的目录骨架。
+- `lab_10_tiny_os`：在 Lab 9 DDR SoC 上实现教学型 StepOS baseline，包含 UART shell、DDR pattern test、timer tick 和两个任务 round-robin scheduler。仿真使用行为级 DDR model，上板使用真实 MIG DDR2 控制器。
+
+  ```bash
+  python3 software/tiny_os/gen_lab10_boot.py
+  vivado -mode batch -source scripts/sim_lab10.tcl
+  vivado -mode batch -source scripts/build_lab10.tcl
+  vivado -mode batch -source scripts/program_lab10.tcl
+  ```
+
+  串口参数为 `115200 8N1`。启动后应看到 `step_into_mips lab10 tiny os`、`DDR CAL OK`、`DDR TEST OK`、`OS INIT OK`、`SCHED READY` 和 `step-os> `；shell 支持 `help`、`ps`、`mem`、`led 1`、`run demo`。
 
 相关文档资料分别位于本仓库不同分支和 `docs/` 目录。
 
