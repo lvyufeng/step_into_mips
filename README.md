@@ -212,4 +212,4 @@ vivado -mode batch -source scripts/program_labN.tcl
 
 - DDCA: [Elsevier Book Store](https://www.elsevier.com/books/digital-design-and-computer-architecture/harris/978-0-12-394424-5)
 - NSCSCC: [全国大学生系统能力培养大赛官网](http://www.nscscc.org/)
-- vsllm: [vsllm](https://vsllm.com)
+- linuxdo: [linuxdo](https://linux.do)
